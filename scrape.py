@@ -40,6 +40,14 @@ def run_scraper():
             body = downloader.download(MODEM_URL)
             items = target.extract_items_from_html(body)
             outputter.output(items)
+            
+            # Need to log out on CM8200 after every scrape, or it won't work for anyone else
+            if MODEM_MODEL == "CM8200" and hasattr(downloader, 'logout'):
+                try:
+                    downloader.logout(MODEM_URL)
+                except Exception as e:
+                    # Connection reset is expected
+                    print("DEBUG: Logout completed (connection reset)")
 
             retries = 0
         except KeyboardInterrupt:
@@ -52,6 +60,10 @@ def run_scraper():
         time.sleep(scraper_config['poll_interval_seconds'])
 
     print("Abort! Max retries reached:", MAX_RETRIES)
+    if MODEM_MODEL == "CM8200":
+        print("Please check your username and password in the config file.")
+        ## Try to log out just in case
+        downloader.logout(MODEM_URL)
     sys.exit(1)
 
 def get_target(model):

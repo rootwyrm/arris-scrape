@@ -1,5 +1,7 @@
 from .downloader import Downloader
+import time
 import requests
+import requests.exceptions
 import ssl
 import base64
 from requests.adapters import HTTPAdapter
@@ -121,3 +123,33 @@ class AuthenticatedDownloader(Downloader):
             return result.content.decode('utf-8')
         except UnicodeDecodeError:
             return result.content
+
+    def logout(self, base_url):
+        """Logout from the modem"""
+        ## Uses a timestamp to prevent caching
+        timestamp = int(time.time() * 1000)
+        logout_url = f"{base_url}/logout.html?_={timestamp}"
+        
+        print(f"DEBUG: Logging out with URL: {logout_url}")
+        try:
+            self.session.get(
+                logout_url,
+                timeout=10,
+                verify=False,
+                headers={
+                    'Authorization': f'Basic {self.auth_token}',
+                    'User-Agent': 'Mozilla/5.0',
+                    'Accept': '*/*',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            )
+        except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as e:
+            # Connection reset is expected behavior on logout
+            print("DEBUG: Connection reset by modem (expected)")
+        except Exception as e:
+            print(f"WARNING: Unexpected error during logout: {e}")
+        finally:
+            # Clear session data regardless of outcome
+            self.auth_token = None
+            self.credential_token = None
+            self.session.cookies.clear()        
