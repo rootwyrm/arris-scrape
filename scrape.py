@@ -14,8 +14,8 @@ OUTPUTTER = scraper_config['outputter']
 def get_downloader():
     """Get appropriate downloader based on modem model"""
     if MODEM_MODEL == "CM8200":
-        from scraper.downloaders.cm8200 import CM8200Downloader
-        return CM8200Downloader(
+        from scraper.downloaders.requests_auth import AuthenticatedDownloader
+        return AuthenticatedDownloader(
             scraper_config['cm8200_username'],
             scraper_config['cm8200_password']
         )
