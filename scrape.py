@@ -11,6 +11,19 @@ MODEM_URL = scraper_config['modem_url']
 MODEM_MODEL = scraper_config['modem_model']
 OUTPUTTER = scraper_config['outputter']
 
+def get_downloader():
+    """Get appropriate downloader based on modem model"""
+    if MODEM_MODEL == "CM8200":
+        from scraper.downloaders.cm8200 import CM8200Downloader
+        return CM8200Downloader(
+            scraper_config['cm8200_username'],
+            scraper_config['cm8200_password']
+        )
+    else:
+        from scraper.downloaders.requests import RequestsDownloader
+        return RequestsDownloader()
+
+
 def run_scraper():
     """
     Starts the scraper.
@@ -19,7 +32,7 @@ def run_scraper():
 
     target = get_target(MODEM_MODEL)
     outputter = get_outputter(OUTPUTTER)
-    downloader = RequestsDownloader()
+    downloader = get_downloader()
 
     retries = 0
     while retries < MAX_RETRIES:
