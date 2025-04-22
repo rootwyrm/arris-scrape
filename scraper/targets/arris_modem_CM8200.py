@@ -1,5 +1,5 @@
 """
-Arris modem module for CM8200 model.
+Arris modem module for CM8200; also works for SB8200 with login, no changes required.
 """
 from bs4 import BeautifulSoup
 from .arris_modem import ArrisModem, UpstreamItem, DownstreamItem

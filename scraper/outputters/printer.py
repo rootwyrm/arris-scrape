@@ -16,16 +16,6 @@ class PrinterOutputter(Outputter):
         Args:
             items ([DownstreamItem], [UpstreamItem]): Tuple of downstream and upstream items
         """
-        # Add detailed debug output
-        print("\nDEBUG: Modem Response Details")
-        print(f"DEBUG: Type: {type(items)}")
-        print(f"DEBUG: Raw content: {repr(items)}")
-        if isinstance(items, (list, tuple)):
-            print(f"DEBUG: Length: {len(items)}")
-            for i, item in enumerate(items):
-                print(f"DEBUG: Item {i}: Type={type(item)}, Value={repr(item)}")
-            print(f"DEBUG: Response structure: {type(items).__name__}[{', '.join(str(type(x).__name__) for x in items)}]")
-
         # Handle empty response
         if not items:
             print(f"\nERROR: Empty response from modem")

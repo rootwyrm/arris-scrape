@@ -46,7 +46,6 @@ class AuthenticatedDownloader(Downloader):
         
         # First auth request to get credential token
         auth_url = f"{self.status_url}?{self.auth_token}"
-        print(f"DEBUG: Authenticating with URL: {auth_url}")
         
         response = self.session.get(
             auth_url,
@@ -70,11 +69,8 @@ class AuthenticatedDownloader(Downloader):
             }
         )
         
-        print(f"DEBUG: Auth response status: {response.status_code}")
-        print(f"DEBUG: Response length: {len(response.content)}")
-        
         if response.status_code != 200:
-            raise Exception(f"Authentication failed: {response.status_code}")
+            raise Exception(f"Authentication failed: {response.status_code}\n Check username and password in config file.")
             
         # Store credential token from response
         self.credential_token = response.content.decode('utf-8')
@@ -107,15 +103,6 @@ class AuthenticatedDownloader(Downloader):
             }
         )
 
-        print("\nDEBUG: Download Response Details")
-        print(f"DEBUG: Status code: {result.status_code}")
-        print(f"DEBUG: Headers: {dict(result.headers)}")
-        print(f"DEBUG: Content length: {len(result.content)}")
-        print("\nDEBUG: Full response content:")
-        print("----------------------------------------")
-        print(result.content.decode('utf-8', errors='replace'))
-        print("----------------------------------------")
-
         if result.status_code != 200:
             raise Exception(f"Received non-200 response: {result.status_code}")
             
@@ -130,7 +117,6 @@ class AuthenticatedDownloader(Downloader):
         timestamp = int(time.time() * 1000)
         logout_url = f"{base_url}/logout.html?_={timestamp}"
         
-        print(f"DEBUG: Logging out with URL: {logout_url}")
         try:
             self.session.get(
                 logout_url,
@@ -145,11 +131,11 @@ class AuthenticatedDownloader(Downloader):
             )
         except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as e:
             # Connection reset is expected behavior on logout
-            print("DEBUG: Connection reset by modem (expected)")
+            pass
         except Exception as e:
             print(f"WARNING: Unexpected error during logout: {e}")
         finally:
             # Clear session data regardless of outcome
             self.auth_token = None
             self.credential_token = None
-            self.session.cookies.clear()        
+            self.session.cookies.clear()
