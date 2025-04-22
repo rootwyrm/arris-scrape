@@ -25,15 +25,7 @@ class TLSAdapter(HTTPAdapter):
         )
 
 class AuthenticatedDownloader(Downloader):
-    """
-    Downloader subclass that handles authentication for CM8200.
-
-    Raises:
-        Exception: Content couldn't be downloaded successfully.
-
-    Returns:
-        string: HTML string of content.
-    """
+    """Downloader subclass that handles authentication for CM8200."""
     def __init__(self, username, password):
         """Initialize with credentials"""
         self.username = username
@@ -41,29 +33,49 @@ class AuthenticatedDownloader(Downloader):
         self.session = requests.Session()
         self.session.mount('https://', TLSAdapter())
         self.auth_token = None
+        self.status_url = None
+        self.credential_token = None
 
     def authenticate(self, base_url):
-        """Authenticate with the modem and get token"""
+        """Authenticate with the modem using the same flow as the web UI"""
         credentials = f"{self.username}:{self.password}"
         self.auth_token = base64.b64encode(credentials.encode()).decode()
-
         self.status_url = f"{base_url}/cmconnectionstatus.html"
         
-        login_url = f"{base_url}/login.html"
+        # First auth request to get credential token
+        auth_url = f"{self.status_url}?{self.auth_token}"
+        print(f"DEBUG: Authenticating with URL: {auth_url}")
+        
         response = self.session.get(
-            login_url,
+            auth_url,
             timeout=10,
             verify=False,
             headers={
                 'Authorization': f'Basic {self.auth_token}',
-                'User-Agent': 'Mozilla/5.0'
+                'Connection': 'keep-alive',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+                'Accept': '*/*',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Sec-Fetch-Site': 'same-origin',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Dest': 'empty',
+                'Accept-Language': 'en-US,en;q=0.9'
+            },
+            cookies={
+                'HttpOnly': 'true',
+                'Secure': 'true'
             }
         )
         
-        if response.status_code != 200:
-            raise Exception("Authentication failed")
+        print(f"DEBUG: Auth response status: {response.status_code}")
+        print(f"DEBUG: Response length: {len(response.content)}")
         
-        print('Authentication successful')
+        if response.status_code != 200:
+            raise Exception(f"Authentication failed: {response.status_code}")
+            
+        # Store credential token from response
+        self.credential_token = response.content.decode('utf-8')
         return self.auth_token
 
     def download(self, url):
@@ -76,14 +88,36 @@ class AuthenticatedDownloader(Downloader):
             timeout=10,
             verify=False,
             headers={
-                'Authorization': f'Basic {self.auth_token}',
-                'User-Agent': 'Mozilla/5.0'
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.192 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'Sec-Fetch-Site': 'same-origin', 
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-User': '?1',
+                'Sec-Fetch-Dest': 'document',
+                'Accept-Language': 'en-US,en;q=0.9'
+            },
+            cookies={
+                'HttpOnly': 'true',
+                'Secure': 'true',
+                'credential': self.credential_token
             }
         )
-         
+
+        print("\nDEBUG: Download Response Details")
+        print(f"DEBUG: Status code: {result.status_code}")
+        print(f"DEBUG: Headers: {dict(result.headers)}")
+        print(f"DEBUG: Content length: {len(result.content)}")
+        print("\nDEBUG: Full response content:")
+        print("----------------------------------------")
+        print(result.content.decode('utf-8', errors='replace'))
+        print("----------------------------------------")
+
         if result.status_code != 200:
             raise Exception(f"Received non-200 response: {result.status_code}")
-        else:
-            print('Modem response OK')
-
-        return result.content
+            
+        try:
+            return result.content.decode('utf-8')
+        except UnicodeDecodeError:
+            return result.content
