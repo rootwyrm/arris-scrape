@@ -18,6 +18,19 @@ if IS_REMOTE:
 else:
     from scraper.downloaders.local import LocalDownloader
 
+
+def get_downloader():
+    """Get appropriate downloader based on modem model"""
+    if MODEM_MODEL == "CM8200":
+        from scraper.downloaders.requests_auth import AuthenticatedDownloader
+        return AuthenticatedDownloader(
+            debug_config['cm8200_username'],
+            debug_config['cm8200_password']
+        )
+    else:
+        from scraper.downloaders.requests import RequestsDownloader
+        return RequestsDownloader()
+
 def run_debugger():
     """
     Starts the debugger.

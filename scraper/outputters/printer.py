@@ -15,7 +15,15 @@ class PrinterOutputter(Outputter):
         Args:
             items ([DownstreamItem], [UpstreamItem]): Tuple of downstream and upstream items
         """
-        downstream_items, upstream_items = items
+        if not items:
+            print("No data received from modem")
+            return
+            
+        try:
+            downstream_items, upstream_items = items
+        except ValueError:
+            print("Invalid data format received from modem")
+            return
 
         print("\n=== Downstream Channels ===")
         if downstream_items:
