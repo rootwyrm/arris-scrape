@@ -17,5 +17,14 @@ Parameters for InfluxDBClient. See influxdb.InfluxDBClient for all options.
 influx_config = {
     'host': '', # POPULATE INFLUX_DB HOST HERE
     'port': 8086,
-    'database': 'modem'
+    'org': 'my-org',
+    'bucket': 'modem-stats',
+    'verify_ssl': True,
+    
+    # Either use token authentication:
+    'token': 'your-api-token-here',
+    
+    # Or username/password authentication:
+    # 'username': 'admin',
+    # 'password': 'password123'
 }

@@ -1,4 +1,4 @@
-influxdb
+influxdb_client
 lxml
 requests
 bs4
