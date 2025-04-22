@@ -10,7 +10,11 @@ RUN apk update; apk upgrade && \
     ./venv/bin/pip install --no-cache-dir -r requirements.txt
 
 FROM alpine:3.21
-RUN apk update && apk upgrade && apk add python3
-COPY --from=installation /usr/src/app /scrape
+RUN apk update && apk upgrade && apk add python3 && mkdir /scrape
+## We absolutely do not need everything.
+COPY --from=installation /usr/src/app/venv /scrape/venv
+COPY --from=installation /usr/src/app/scraper /scrape/scraper
+COPY --from=installation /usr/src/app/config.py /scrape/config.py
+COPY --from=installation /usr/src/app/scrape.py /scrape/scrape.py
 
 CMD [ "/scrape/venv/bin/python", "/scrape/scrape.py" ]
