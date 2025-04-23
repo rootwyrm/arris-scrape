@@ -71,10 +71,17 @@ class AuthenticatedDownloader(Downloader):
         
         if response.status_code != 200:
             raise Exception(f"Authentication failed: {response.status_code}\n Check username and password in config file.")
+
+        if response.status_code != 200:
+            raise Exception(f"Authentication failed: {response.status_code}")
+
+        # Store credential token, stripping any HTML
+        content = response.content.decode('utf-8')
+        if '<!DOCTYPE' in content:
+            raise Exception("Received login page instead of credential token")
             
-        # Store credential token from response
-        self.credential_token = response.content.decode('utf-8')
-        return self.auth_token
+        self.credential_token = content.strip()
+        return self.auth_token            
 
     def download(self, url):
         """Download content with authentication"""

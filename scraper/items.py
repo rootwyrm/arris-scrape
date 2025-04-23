@@ -30,11 +30,28 @@ class InfluxableItem(Item):
         """
 
     @staticmethod
-    def int_at_pos(val, pos = 0):
+    def int_at_pos(val, pos=0):
         """
-        Splits a string v and converts element at position p to an int.
+        Convert value to integer at given position after splitting
+        
+        Args:
+            val: The value to convert
+            pos: Position in split string (default: 0)
+            default: Value to return if conversion fails (default: None)
+            
+        Returns:
+            Integer value or default if conversion fails
         """
-        return int(str(val).split()[pos])
+
+        if val is None:
+            return 0
+        try:
+            parts = str(val).strip().split()
+            if not parts:
+                return 0
+            return int(parts[pos])
+        except (ValueError, IndexError):
+            return 0
 
     @staticmethod
     def float_at_pos(val, pos = 0):
